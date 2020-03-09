@@ -1,7 +1,7 @@
 
-############
+************
 Introduction
-############
+************
 
 Simple and fast spectrum viewer using `pymzML`_ and `Dash`_
 
