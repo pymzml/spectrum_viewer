@@ -20,6 +20,14 @@ Installation
    user@localhost:~$ git clone https://github.com/pymzML/spectrum_viewer.git
    user@localhost:~$ cd spectrum_viewer
    user@localhost:~$ pip install -r requirements.txt
-   user@localhost:~$ python spectrum_viewer <path_to_mzml_file>
+
+
+*****
+Usage
+*****
+
+Invoke script with path to mzML file as first argument::
+
+	user@localhost:~$ python spectrum_viewer <path_to_mzml_file>
 
 
