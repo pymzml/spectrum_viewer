@@ -28,6 +28,6 @@ Usage
 
 Invoke script with path to mzML file as first argument::
 
-	user@localhost:~$ python spectrum_viewer <path_to_mzml_file>
+	user@localhost:~$ python spectrum_viewer.py <path_to_mzml_file>
 
 
