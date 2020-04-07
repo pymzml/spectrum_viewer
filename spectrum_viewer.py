@@ -11,9 +11,9 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 
-
-print('loading run...')
-run = pymzml.run.Reader(sys.argv[1])
+mzml_run = sys.argv[1]
+print('loading run: {0}'.format(mzml_run))
+run = pymzml.run.Reader(mzml_run)
 
 all_ids = []
 for spec_id, offset in run.info['offset_dict'].items():
@@ -28,10 +28,20 @@ p = pymzml.plot.Factory()
 p.new_plot()
 
 tic_x=[]
-tic_y=[]
-for x,y in run['TIC'].peaks():
-    tic_x.append(x)
-    tic_y.append(y)
+tic_y=[]    
+try:
+    for x,y in run['TIC'].peaks():
+        tic_x.append(x)
+        tic_y.append(y)
+except:
+    # no chromatogram present
+    print('No TIC present, calculating from specs...')
+    for spec in run:
+        tic_x.append(spec.scan_time[0])
+        tic_y.append(spec.TIC)
+    # reload run
+    run = pymzml.run.Reader(mzml_run)
+
 max_tic = max(tic_y)
 
 tic_annotation = []
@@ -167,14 +177,15 @@ def update_figure(spectrum):
         spectrum.ID,
         spectrum.scan_time[0],
         spectrum.scan_time[1],
-        os.path.basename(sys.argv[1])
+        os.path.basename(mzml_run)
     )
     if spectrum.ms_level == 2:
-        tmp_selected_precursors = spectrum.selected_precursors[0]
         format_str_template = '<br>'
-        for key, format_template in [ ('mz',' Precursor m/z: {0}'), ('i', '; intensity {0:1.2e}'), ('charge','; charge: {0}') ]:
-            if key in tmp_selected_precursors.keys():
-                format_str_template += format_template.format(tmp_selected_precursors[key])
+        if len(spectrum.selected_precursors) > 0:
+            tmp_selected_precursors = spectrum.selected_precursors[0]
+            for key, format_template in [ ('mz',' Precursor m/z: {0}'), ('i', '; intensity {0:1.2e}'), ('charge','; charge: {0}') ]:
+                if key in tmp_selected_precursors.keys():
+                    format_str_template += format_template.format(tmp_selected_precursors[key])
         title += format_str_template
     return {
         'data': [new_spectrum_plot],
