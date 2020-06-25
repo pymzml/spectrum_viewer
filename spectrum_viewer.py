@@ -74,10 +74,15 @@ app.layout = html.Div([
             'fontSize': '130%'
         }
     ),
+    html.Button(id="prev-button", n_clicks=0, children="Previous spectrum"),
+    html.Button(id="next-button", n_clicks=0, children="Next spectrum"),
     dcc.Graph(
         id='tic-plot',
     ),
 ])
+
+
+
 
 
 def get_spectrum(spectrum_id):
@@ -99,10 +104,13 @@ def sanitize_id(spectrum_id_from_input):
     dash.dependencies.Output('tic-plot', 'figure'),
     [
         dash.dependencies.Input('spectrum-input-field', 'value'),
+        dash.dependencies.Input("next-button", "n_clicks"),
+        dash.dependencies.Input("prev-button", "n_clicks")
     ]
 )
-def update_TIC(spectrum_id_from_input=None):
+def update_TIC( spectrum_id_from_input=None, next_n_clicks=0, prev_n_clicks=0):
     spectrum_id = sanitize_id(spectrum_id_from_input)
+    spectrum_id = update_spectrum_id(spectrum_id, next_n_clicks, prev_n_clicks) 
     spectrum = get_spectrum(spectrum_id)
     rt = spectrum.scan_time[0]
     figure = {
@@ -140,16 +148,41 @@ def update_TIC(spectrum_id_from_input=None):
 
 
 @app.callback(
+    [
+        dash.dependencies.Output('next-button','n_clicks'),
+        dash.dependencies.Output('prev-button','n_clicks'),
+    ],
+    [
+        dash.dependencies.Input('spectrum-input-field', 'value')
+    ]
+ )
+def update(reset):
+    return 0, 0
+
+
+
+@app.callback(
     dash.dependencies.Output('spectrum-plot', 'figure'),
     [
         dash.dependencies.Input('spectrum-input-field', 'value'),
+        dash.dependencies.Input("next-button", "n_clicks"),
+        dash.dependencies.Input("prev-button", "n_clicks")
     ]
 )
-def trigger_new_spec_from_input( spectrum_id_from_input=None):
+def trigger_new_spec_from_input( spectrum_id_from_input=None, next_n_clicks=0, prev_n_clicks=0):
     spectrum_id = sanitize_id(spectrum_id_from_input)
+    spectrum_id = update_spectrum_id(spectrum_id, next_n_clicks, prev_n_clicks)
     spectrum = get_spectrum(spectrum_id)
     return update_figure(spectrum)
 
+
+
+def update_spectrum_id(spectrum_id, next_n_clicks, prev_n_clicks):
+    total_shift = next_n_clicks-prev_n_clicks
+    spectrum_id += total_shift
+    if spectrum_id < 1:
+        spectrum_id = 1
+    return spectrum_id
 
 def update_figure(spectrum):
     spectrum_plot = p.add(
