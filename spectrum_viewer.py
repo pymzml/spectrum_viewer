@@ -11,6 +11,21 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 
+ACCESSIONS_INFO=[
+    ("MS:1000130", "positive scan"),
+    ("MS:1000128", "profile spectrum"),
+    ("MS:1000504", "base peak m/z"),
+    ("MS:1000505", "base peak intensity" ),
+    ("MS:1000285", "total ion current" ),
+    ("MS:1000528", "lowest observed m/z" ),
+    ("MS:1000527", "highest observed m/z" ),
+    # ("MS:1000796", "spectrum title" ),
+    ("MS:1000512", "filter string" ),
+    ("MS:1000616", "preset scan configuration" ),
+    ("MS:1000927", "ion injection time" ),
+    ("MS:1000501", "scan window lower limit"),
+    ("MS:1000500", "scan window upper limit"),
+]
 
 print('loading run...')
 run = pymzml.run.Reader(sys.argv[1])
@@ -211,9 +226,15 @@ def update_figure(spectrum):
                 format_str_template += format_template.format(tmp_selected_precursors[key])
         title += format_str_template
     info_text='spectrum info'
+    for ms_acc, acc_name in ACCESSIONS_INFO:
+        acc_value = spectrum.get(ms_acc,None)
+        if acc_value is not None:
+            info_text +='<br>{0}: {1}'.format(acc_name, acc_value)
+    max_x = max([x for x in new_spectrum_plot['x'] if x is not None])
+    max_y = max([y for y in new_spectrum_plot['y'] if y is not None])
     info_plot=go.Scatter(
-        x=[max([x for x in new_spectrum_plot['x'] if x is not None])],
-        y=[max([y for y in new_spectrum_plot['y'] if y is not None])],
+        x=[max_x-5],
+        y=[max_y+max_y/20],
         text=[info_text],
         mode='markers',
         marker={'color':'black'},
@@ -228,7 +249,23 @@ def update_figure(spectrum):
             legend={'x': 0, 'y': 1},
             hovermode='closest',
             title = title,
-            showlegend=False
+            showlegend=False,
+            annotations=[
+                {
+                    "x": max_x-5,
+                    "y":max_y+max_y/20,
+                    "xref": "x",
+                    "yref": "y",
+                    "text": 'info',
+                    "textangle": 0,
+                    "font": {"size": 10, "color": 'black'},
+                    "align": "center",
+                    "showarrow": False,
+                    "xanchor": "center",
+                    "yanchor": "bottom",
+                    # 'textposition': 'top'
+                }
+            ]
         )
     }
 

@@ -1,2 +1,2 @@
-pymzml
+pymzml==2.4.7
 dash==1.8.0
