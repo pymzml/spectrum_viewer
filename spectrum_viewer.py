@@ -36,11 +36,11 @@ max_tic = max(tic_y)
 
 tic_annotation = []
 
-for n, RT in enumerate(tic_x):
+for spec_id, RT in zip(all_ids, tic_x):
     tic_annotation.append(
         'RT: {0:1.3f}<br>ID: {1}'.format(
             RT,
-            all_ids[n]
+            spec_id
         )
     )
 
@@ -196,7 +196,8 @@ def update_figure(spectrum):
     new_spectrum_plot['y'] = spectrum_plot['y']
     new_spectrum_plot['line']={'color':'black'}
     # print(spectrum_plot)
-    title = 'Spectrum {0} @ RT: {1} [{2}s] of run {3}'.format(
+    title = 'MS{0} Spectrum {1} @ RT: {2:1.3f} [{3}s] of run {4}'.format(
+        spectrum.ms_level,
         spectrum.ID,
         spectrum.scan_time[0],
         spectrum.scan_time[1],
@@ -209,15 +210,25 @@ def update_figure(spectrum):
             if key in tmp_selected_precursors.keys():
                 format_str_template += format_template.format(tmp_selected_precursors[key])
         title += format_str_template
+    info_text='spectrum info'
+    info_plot=go.Scatter(
+        x=[max([x for x in new_spectrum_plot['x'] if x is not None])],
+        y=[max([y for y in new_spectrum_plot['y'] if y is not None])],
+        text=[info_text],
+        mode='markers',
+        marker={'color':'black'},
+        hoverinfo='text'
+    )
     return {
-        'data': [new_spectrum_plot],
+        'data': [new_spectrum_plot, info_plot],
         'layout': go.Layout(
             xaxis={ 'title': 'm/z'},
             yaxis={'title': 'Intensity',},
             margin={'l': 40, 'b': 40, 't': 80, 'r': 10},
             legend={'x': 0, 'y': 1},
             hovermode='closest',
-            title = title
+            title = title,
+            showlegend=False
         )
     }
 
