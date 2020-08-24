@@ -25,6 +25,7 @@ ACCESSIONS_INFO=[
     ("MS:1000927", "ion injection time" ),
     ("MS:1000501", "scan window lower limit"),
     ("MS:1000500", "scan window upper limit"),
+    ("MS:1001581", "FAIMS compensation voltage")
 ]
 
 print('loading run...')
@@ -200,8 +201,11 @@ def update_spectrum_id(spectrum_id, next_n_clicks, prev_n_clicks):
     return spectrum_id
 
 def update_figure(spectrum):
+    peak_list=spectrum.peaks('centroided')
+    # if len(peak_list) ==0:
+    #     peak_list=[(0,0)]
     spectrum_plot = p.add(
-        spectrum.peaks('centroided'),
+        peak_list,
         color = ( 0, 0, 0 ),
         style = 'sticks',
         name = 'peaks'
