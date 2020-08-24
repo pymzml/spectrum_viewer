@@ -11,6 +11,22 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 
+ACCESSIONS_INFO=[
+    ("MS:1000130", "positive scan"),
+    ("MS:1000128", "profile spectrum"),
+    ("MS:1000504", "base peak m/z"),
+    ("MS:1000505", "base peak intensity" ),
+    ("MS:1000285", "total ion current" ),
+    ("MS:1000528", "lowest observed m/z" ),
+    ("MS:1000527", "highest observed m/z" ),
+    # ("MS:1000796", "spectrum title" ),
+    ("MS:1000512", "filter string" ),
+    ("MS:1000616", "preset scan configuration" ),
+    ("MS:1000927", "ion injection time" ),
+    ("MS:1000501", "scan window lower limit"),
+    ("MS:1000500", "scan window upper limit"),
+    ("MS:1001581", "FAIMS compensation voltage")
+]
 
 print('loading run...')
 run = pymzml.run.Reader(sys.argv[1])
@@ -36,11 +52,11 @@ max_tic = max(tic_y)
 
 tic_annotation = []
 
-for n, RT in enumerate(tic_x):
+for spec_id, RT in zip(all_ids, tic_x):
     tic_annotation.append(
         'RT: {0:1.3f}<br>ID: {1}'.format(
             RT,
-            all_ids[n]
+            spec_id
         )
     )
 
@@ -185,8 +201,11 @@ def update_spectrum_id(spectrum_id, next_n_clicks, prev_n_clicks):
     return spectrum_id
 
 def update_figure(spectrum):
+    peak_list=spectrum.peaks('centroided')
+    # if len(peak_list) ==0:
+    #     peak_list=[(0,0)]
     spectrum_plot = p.add(
-        spectrum.peaks('centroided'),
+        peak_list,
         color = ( 0, 0, 0 ),
         style = 'sticks',
         name = 'peaks'
@@ -196,7 +215,8 @@ def update_figure(spectrum):
     new_spectrum_plot['y'] = spectrum_plot['y']
     new_spectrum_plot['line']={'color':'black'}
     # print(spectrum_plot)
-    title = 'Spectrum {0} @ RT: {1} [{2}s] of run {3}'.format(
+    title = 'MS{0} Spectrum {1} @ RT: {2:1.3f} [{3}s] of run {4}'.format(
+        spectrum.ms_level,
         spectrum.ID,
         spectrum.scan_time[0],
         spectrum.scan_time[1],
@@ -209,15 +229,47 @@ def update_figure(spectrum):
             if key in tmp_selected_precursors.keys():
                 format_str_template += format_template.format(tmp_selected_precursors[key])
         title += format_str_template
+    info_text='spectrum info'
+    for ms_acc, acc_name in ACCESSIONS_INFO:
+        acc_value = spectrum.get(ms_acc,None)
+        if acc_value is not None:
+            info_text +='<br>{0}: {1}'.format(acc_name, acc_value)
+    max_x = max([x for x in new_spectrum_plot['x'] if x is not None])
+    max_y = max([y for y in new_spectrum_plot['y'] if y is not None])
+    info_plot=go.Scatter(
+        x=[max_x-5],
+        y=[max_y+max_y/20],
+        text=[info_text],
+        mode='markers',
+        marker={'color':'black'},
+        hoverinfo='text'
+    )
     return {
-        'data': [new_spectrum_plot],
+        'data': [new_spectrum_plot, info_plot],
         'layout': go.Layout(
             xaxis={ 'title': 'm/z'},
             yaxis={'title': 'Intensity',},
             margin={'l': 40, 'b': 40, 't': 80, 'r': 10},
             legend={'x': 0, 'y': 1},
             hovermode='closest',
-            title = title
+            title = title,
+            showlegend=False,
+            annotations=[
+                {
+                    "x": max_x-5,
+                    "y":max_y+max_y/20,
+                    "xref": "x",
+                    "yref": "y",
+                    "text": 'info',
+                    "textangle": 0,
+                    "font": {"size": 10, "color": 'black'},
+                    "align": "center",
+                    "showarrow": False,
+                    "xanchor": "center",
+                    "yanchor": "bottom",
+                    # 'textposition': 'top'
+                }
+            ]
         )
     }
 
