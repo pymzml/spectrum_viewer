@@ -1,2 +1,2 @@
 pymzml
-dash==1.8.0
+dash==2.15.0
